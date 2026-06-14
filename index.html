@@ -3,39 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spoters Dev Mundial 2026</title>
+<title>Mundial 2026</title>
 <style>
+  :root {
+    --color-primary:      #1A2A4A;
+    --color-accent:       #FF6B35;
+    --color-accent-hover: #D95B2D;
+    --color-bg:           #F4F6F8;
+    --color-surface:      #FFFFFF;
+    --color-text:         #2C2C2C;
+    --color-text-muted:   #6B7A8D;
+    --color-border:       #D0D8E4;
+  }
   * { box-sizing: border-box; font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-  body { margin:0; background:#0d1b2a; color:#fff; padding-bottom:40px; }
-  header { background:#1b263b; padding:16px; text-align:center; position:sticky; top:0; z-index:10; }
-  header h1 { margin:0; font-size:20px; }
-  .tabs { display:flex; background:#1b263b; border-bottom:1px solid #415a77; }
-  .tab { flex:1; padding:12px; text-align:center; cursor:pointer; font-size:14px; }
-  .tab.active { background:#415a77; font-weight:bold; }
+  body { margin:0; background:var(--color-bg); color:var(--color-text); padding-bottom:40px; }
+  header { background:var(--color-primary); padding:16px; text-align:center; position:sticky; top:0; z-index:10; }
+  header h1 { margin:0; font-size:20px; color:#fff; }
+  .tabs { display:flex; background:var(--color-primary); border-bottom:1px solid rgba(255,255,255,0.15); }
+  .tab { flex:1; padding:12px; text-align:center; cursor:pointer; font-size:14px; color:#fff; }
+  .tab.active { background:rgba(255,255,255,0.2); font-weight:bold; }
   .container { padding:12px; max-width:600px; margin:0 auto; }
-  .card { background:#1b263b; border-radius:10px; padding:12px; margin-bottom:10px; }
+  .card { background:var(--color-surface); border-radius:10px; padding:12px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
   .match { display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .team { flex:1; text-align:center; font-size:13px; }
-  input[type=number] { width:50px; text-align:center; padding:6px; border-radius:6px; border:none; font-size:16px; }
-  input[type=number]:disabled { color:#fff; background:#415a77; opacity:1; }
-  .vs { padding:0 6px; color:#778da9; font-size:12px; }
-  .meta { font-size:11px; color:#778da9; margin-top:4px; text-align:center; }
-  button { background:#e63946; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-size:14px; cursor:pointer; width:100%; margin-top:8px; }
-  select, input[type=text] { width:100%; padding:10px; border-radius:6px; border:none; font-size:16px; margin-bottom:8px; }
+  input[type=number] { width:50px; text-align:center; padding:6px; border-radius:6px; border:1px solid var(--color-border); font-size:16px; background:var(--color-surface); color:var(--color-text); }
+  input[type=number]:disabled { color:var(--color-text-muted); background:var(--color-border); opacity:1; }
+  .vs { padding:0 6px; color:var(--color-text-muted); font-size:12px; }
+  .meta { font-size:11px; color:var(--color-text-muted); margin-top:4px; text-align:center; }
+  button { background:var(--color-accent); color:#fff; border:none; padding:10px 16px; border-radius:6px; font-size:14px; cursor:pointer; width:100%; margin-top:8px; }
+  button:hover { background:var(--color-accent-hover); }
+  select, input[type=text] { width:100%; padding:10px; border-radius:6px; border:1px solid var(--color-border); font-size:16px; margin-bottom:8px; color:var(--color-text); background:var(--color-surface); }
   table { width:100%; border-collapse:collapse; font-size:13px; }
-  th, td { padding:8px 4px; text-align:left; border-bottom:1px solid #415a77; }
-  th { color:#778da9; font-weight:normal; }
+  th, td { padding:8px 4px; text-align:left; border-bottom:1px solid var(--color-border); }
+  th { color:var(--color-text-muted); font-weight:normal; }
   .pos { font-weight:bold; width:24px; }
-  .pts { text-align:right; font-weight:bold; color:#e63946; }
+  .pts { text-align:right; font-weight:bold; color:var(--color-accent); }
   .saved { color:#52b788; font-size:12px; text-align:center; margin-top:4px; }
   .hidden { display:none; }
   .login { text-align:center; padding:40px 20px; }
-  .group-title { font-size:13px; color:#778da9; margin:16px 0 6px; padding-left:4px; }
+  .group-title { font-size:13px; color:var(--color-text-muted); margin:16px 0 6px; padding-left:4px; }
   .result { font-size:11px; color:#52b788; }
 </style>
 </head>
 <body>
-<header><h1>⚽ Spoters Dev Mundial 2026</h1></header>
+<header><h1>⚽ Mundial 2026</h1></header>
 
 <div id="login" class="login">
   <div class="card">
@@ -50,12 +61,12 @@
     <div class="tab active" onclick="showTab('partidos')">Partidos</div>
     <div class="tab" onclick="showTab('tabla')">Tabla</div>
     <div class="tab" onclick="showTab('todos')">Todos los picks</div>
-    <div class="tab" onclick="showTab('mas')">MÁS</div>
+
     <div class="tab" onclick="showTab('admin')">⚙️</div>
   </div>
   <div class="container">
-    <div style="text-align:right; font-size:12px; color:#778da9; margin-bottom:8px;">
-      Jugando como: <b id="userLabel"></b> | <a href="#" onclick="logout()" style="color:#e63946;">cambiar</a>
+    <div style="text-align:right; font-size:12px; color:var(--color-text-muted); margin-bottom:8px;">
+      Jugando como: <b id="userLabel"></b> | <a href="#" onclick="logout()" style="color:var(--color-accent);">cambiar</a>
     </div>
     <div id="partidos"></div>
     <div id="tabla" class="hidden"></div>
@@ -69,14 +80,23 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBfOfmikjIGX2xdN8jfsqA-DwbqtbnltY0",
+//   authDomain: "sporters-dev-mundial.firebaseapp.com",
+//   projectId: "sporters-dev-mundial",
+//   storageBucket: "sporters-dev-mundial.firebasestorage.app",
+//   messagingSenderId: "750336519011",
+//   appId: "1:750336519011:web:7ffb8984b0a6593c250156"
+// };
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBfOfmikjIGX2xdN8jfsqA-DwbqtbnltY0",
-  authDomain: "sporters-dev-mundial.firebaseapp.com",
-  projectId: "sporters-dev-mundial",
-  storageBucket: "sporters-dev-mundial.firebasestorage.app",
-  messagingSenderId: "750336519011",
-  appId: "1:750336519011:web:7ffb8984b0a6593c250156"
-};
+    apiKey: "AIzaSyBGzGDWqehWgtpRjQrZdNyiFhP2sorSmTg",
+    authDomain: "mundial-humberto.firebaseapp.com",
+    projectId: "mundial-humberto",
+    storageBucket: "mundial-humberto.firebasestorage.app",
+    messagingSenderId: "911708546249",
+    appId: "1:911708546249:web:9f9a9005f396fb75591918"
+  };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -342,8 +362,9 @@ function calcPoints(pick, result) {
   const ph = parseInt(pick.home), pa = parseInt(pick.away);
   const rh = result.home, ra = result.away;
   if (isNaN(ph) || isNaN(pa)) return 0;
-  if (ph === rh && pa === ra) return 1;
-  return 2;
+  if (ph === rh && pa === ra) return 3;
+  if (ph === rh || pa === ra) return 1;
+  return 0;
 }
 
 async function settleMas(matchId) {
@@ -446,19 +467,19 @@ async function renderMas() {
   const pozos = state.pozos || [];
   let pozosHtml;
   if (pozos.length === 0) {
-    pozosHtml = '<div style="font-size:13px;color:#778da9;margin-top:4px">No hay pozos activos.</div>';
+    pozosHtml = '<div style="font-size:13px;color:var(--color-text-muted);margin-top:4px">No hay pozos activos.</div>';
   } else {
     const totalPts = pozos.reduce((sum, p) => sum + p.puntos, 0);
     pozosHtml = pozos.map((p, i) =>
       `<div style="margin-top:10px;padding-top:${i>0?'10px':0};${i>0?'border-top:1px solid #1b2a3b':''}">
-        <span style="font-size:22px;font-weight:bold;color:#e63946">${p.puntos} pts</span>
-        <div style="font-size:11px;color:#778da9;margin-top:2px">Elegibles: ${p.elegibles.join(', ')}</div>
+        <span style="font-size:22px;font-weight:bold;color:var(--color-accent)">${p.puntos} pts</span>
+        <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px">Elegibles: ${p.elegibles.join(', ')}</div>
       </div>`
     ).join('') +
-    `<div style="margin-top:10px;font-size:11px;color:#778da9;border-top:1px solid #1b2a3b;padding-top:6px">Total en juego: ${totalPts} pts (${pozos.length} pozo${pozos.length>1?'s':''})</div>`;
+    `<div style="margin-top:10px;font-size:11px;color:var(--color-text-muted);border-top:1px solid #1b2a3b;padding-top:6px">Total en juego: ${totalPts} pts (${pozos.length} pozo${pozos.length>1?'s':''})</div>`;
   }
   let html = `<div class="card" style="text-align:center">
-    <div style="font-size:12px;color:#778da9;margin-bottom:4px">Pozos activos</div>
+    <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:4px">Pozos activos</div>
     ${pozosHtml}
   </div>`;
 
@@ -473,7 +494,7 @@ async function renderMas() {
   // Historial
   const settled = Object.entries(masHistory).sort((a,b) => Number(b[0])-Number(a[0]));
   if (settled.length === 0) {
-    html += '<div class="card" style="color:#778da9;text-align:center">Aún no hay partidos liquidados.</div>';
+    html += '<div class="card" style="color:var(--color-text-muted);text-align:center">Aún no hay partidos liquidados.</div>';
   }
   settled.forEach(([mid, s]) => {
     const m = matchMap[Number(mid)];
@@ -483,15 +504,15 @@ async function renderMas() {
       const ganadores = Object.entries(s.pagos).filter(([,pts]) => pts > 0);
       resultado = ganadores.length > 0
         ? ganadores.map(([u, pts]) => `${u} <b style="color:#52b788">+${pts} pts</b>`).join(', ')
-        : '<span style="color:#778da9">Nadie acertó — pozos acumulados</span>';
+        : '<span style="color:var(--color-text-muted)">Nadie acertó — pozos acumulados</span>';
     } else {
       if ((s.acertantesElegibles || []).length > 0) {
         resultado = s.acertantesElegibles.map(u => `${u} <b style="color:#52b788">+${s.premioElegible} pts</b>`).join(', ');
       } else if ((s.acertantes || []).length > 0) {
         resultado = s.acertantes.map(u => `${u} <b style="color:#52b788">+${s.premioNoElegible} pts</b>`).join(', ')
-          + ` <span style="color:#778da9">(no elegibles)</span>`;
+          + ` <span style="color:var(--color-text-muted)">(no elegibles)</span>`;
       } else {
-        resultado = '<span style="color:#778da9">Nadie acertó — pozo acumulado</span>';
+        resultado = '<span style="color:var(--color-text-muted)">Nadie acertó — pozo acumulado</span>';
       }
     }
     const pozoInfo = s.newPool
@@ -500,9 +521,9 @@ async function renderMas() {
     html += `<div class="card">
       <div style="font-weight:bold;margin-bottom:6px">${title}</div>
       <table>
-        <tr><td style="color:#778da9">Participantes</td><td>${s.participants.join(', ')}</td></tr>
-        <tr><td style="color:#778da9">Pozos</td><td>${pozoInfo}</td></tr>
-        <tr><td style="color:#778da9">Resultado</td><td>${resultado}</td></tr>
+        <tr><td style="color:var(--color-text-muted)">Participantes</td><td>${s.participants.join(', ')}</td></tr>
+        <tr><td style="color:var(--color-text-muted)">Pozos</td><td>${pozoInfo}</td></tr>
+        <tr><td style="color:var(--color-text-muted)">Resultado</td><td>${resultado}</td></tr>
       </table>
     </div>`;
   });
@@ -575,26 +596,26 @@ async function renderTabla() {
     const picks = picksMap[u];
     let total = 0;
     let exactos = 0;
-    let bol = 0;
+    let parciales = 0;
     MATCHES.forEach(m => {
       const result = RESULTS[m.id];
       if (result && picks[m.id]) {
         const pts = calcPoints(picks[m.id], result);
         total += pts;
-        if (pts === 1) exactos++;
-        bol++;
+        if (pts === 3) exactos++;
+        if (pts === 1) parciales++;
       }
     });
-    scores.push({user:u, total, exactos, bol, bolPts: bol * 2});
+    scores.push({user:u, total, exactos, parciales});
   }
-  scores.sort((a,b) => b.bolPts - a.bolPts || b.exactos - a.exactos);
+  scores.sort((a,b) => b.total - a.total || b.exactos - a.exactos);
   let html = `<div class="card"><table>
-    <tr><th></th><th>Jugador</th><th>Exactos</th><th class="pts">Bol.</th></tr>`;
+    <tr><th></th><th>Jugador</th><th>Exactos</th><th>+1</th><th class="pts">Pts</th></tr>`;
   scores.forEach((s,i) => {
-    html += `<tr><td class="pos">${i+1}</td><td>${s.user}${s.user===currentUser?' (tú)':''}</td><td>${s.exactos}</td><td class="pts">${s.bolPts}</td></tr>`;
+    html += `<tr><td class="pos">${i+1}</td><td>${s.user}${s.user===currentUser?' (tú)':''}</td><td>${s.exactos}</td><td>${s.parciales}</td><td class="pts">${s.total}</td></tr>`;
   });
-  const totalBol = scores.reduce((sum, s) => sum + s.bolPts, 0);
-  html += `<tr style="border-top:2px solid #415a77"><td></td><td style="color:#778da9">Total</td><td></td><td class="pts">${totalBol}</td></tr>`;
+  const totalPts = scores.reduce((sum, s) => sum + s.total, 0);
+  html += `<tr style="border-top:2px solid var(--color-border)"><td></td><td style="color:var(--color-text-muted)">Total</td><td></td><td></td><td class="pts">${totalPts}</td></tr>`;
   html += '</table></div>';
   if (scores.length === 0) html = '<div class="card">Aún no hay resultados cargados.</div>';
   document.getElementById('tabla').innerHTML = html;
@@ -602,29 +623,24 @@ async function renderTabla() {
 
 async function renderTodos() {
   const users = await getAllUsers();
-  const [picksMap, RESULTS, pagos] = await Promise.all([getAllPicks(users), getResults(), getPagos()]);
+  const [picksMap, RESULTS] = await Promise.all([getAllPicks(users), getResults()]);
   let html = '';
   for (const m of [...MATCHES].sort((a,b) => a.sortKey.localeCompare(b.sortKey))) {
     const result = RESULTS[m.id];
-    const resultStr = result ? ` · <b style="color:#e63946">${result.home}-${result.away}</b>` : '';
+    const resultStr = result ? ` · <b style="color:var(--color-accent)">${result.home}-${result.away}</b>` : '';
     html += `<div class="card"><div class="meta" style="text-align:left; margin-bottom:6px;"><b>${m.home} vs ${m.away}</b>${resultStr} — ${m.group} · ${m.date}</div><table>`;
     for (const u of users) {
       const p = picksMap[u][m.id];
       const hasPick = p && p.home !== '' && p.home !== undefined;
       const val = hasPick ? `${p.home} - ${p.away}` : '—';
-      const pagoIndicator = hasPick
-        ? (!!pagos[`${m.id}_${u}`]
-          ? '<span style="color:#52b788;font-size:10px;margin-left:4px">● Pagó</span>'
-          : '<span style="color:#e63946;font-size:10px;margin-left:4px">● No pagó</span>')
-        : '';
-      html += `<tr><td>${u}${u===currentUser?' (tú)':''}${pagoIndicator}</td><td style="text-align:right">${val}</td></tr>`;
+      html += `<tr><td>${u}${u===currentUser?' (tú)':''}</td><td style="text-align:right">${val}</td></tr>`;
     }
     html += '</table></div>';
   }
   document.getElementById('todos').innerHTML = html;
 }
 
-const ADMIN_PASS = "mundial2026"; // cámbiala si quieres
+const ADMIN_PASS = "humberto26"; // cámbiala si quieres
 let adminUnlocked = sessionStorage.getItem('admin_ok') === '1';
 
 async function renderAdmin() {
@@ -637,8 +653,7 @@ async function renderAdmin() {
       </div>`;
     return;
   }
-  const [locks, RESULTS, allUsers, pagos] = await Promise.all([getLocks(), getResults(), getAllUsers(), getPagos()]);
-  const picksMap = await getAllPicks(allUsers);
+  const [locks, RESULTS, allUsers] = await Promise.all([getLocks(), getResults(), getAllUsers()]);
   let html = '';
   let lastDate = '';
   const sortedMatches = [...MATCHES].sort((a,b) => a.sortKey.localeCompare(b.sortKey));
@@ -650,28 +665,6 @@ async function renderAdmin() {
     }
     const locked = !!locks[m.id];
     const r = RESULTS[m.id] || {home:'', away:''};
-    const usersWithPick = allUsers.filter(u => {
-      const p = picksMap[u][m.id];
-      return p && p.home !== '' && p.home !== undefined;
-    });
-    let pagosBlock = '';
-    if (usersWithPick.length > 0) {
-      pagosBlock = `<div style="margin-top:8px;border-top:1px solid #415a77;padding-top:8px">
-        <div style="font-size:11px;color:#778da9;margin-bottom:4px">Pagos</div>
-        <table>`;
-      usersWithPick.forEach(u => {
-        const paid = !!pagos[`${m.id}_${u}`];
-        pagosBlock += `<tr>
-          <td>${u}</td>
-          <td style="text-align:right">
-            <button style="width:auto;margin:0;padding:4px 10px;font-size:12px;background:${paid?'#52b788':'#e63946'}" onclick="togglePago(${m.id}, '${u}', ${!paid})">
-              ${paid ? '✓ Pagó' : '✗ No pagó'}
-            </button>
-          </td>
-        </tr>`;
-      });
-      pagosBlock += `</table></div>`;
-    }
     html += `
     <div class="card">
       <div class="meta" style="text-align:left; margin-bottom:6px;"><b>${m.home} vs ${m.away}</b> — ${m.group}</div>
@@ -681,58 +674,11 @@ async function renderAdmin() {
         <input type="number" min="0" id="ra_${m.id}" value="${r.away}" style="width:50px">
         <button style="width:auto; flex:1; margin:0;" onclick="saveResult(${m.id})">Guardar resultado</button>
       </div>
-      <button style="background:${locked?'#52b788':'#e63946'}" onclick="toggleLock(${m.id}, ${!locked})">
+      <button style="background:${locked?'#52b788':'var(--color-accent)'}" onclick="toggleLock(${m.id}, ${!locked})">
         ${locked ? '🔓 Desbloquear' : '🔒 Bloquear'}
       </button>
-      ${pagosBlock}
     </div>`;
   });
-  // Sección MÁS
-  const [masState, masHistory, masResults] = await Promise.all([getMasState(), getMasHistory(), getResults()]);
-  html += `<div class="group-title">MÁS — Liquidar partidos</div>`;
-  const adminPozos = masState.pozos || [];
-  if (adminPozos.length === 0) {
-    html += `<div class="card" style="text-align:center;color:#778da9">Sin pozos activos</div>`;
-  } else {
-    html += `<div class="card"><table>`;
-    adminPozos.forEach((p, i) => {
-      html += `<tr><td style="color:#778da9">Pozo ${i+1}</td><td><b style="color:#e63946">${p.puntos} pts</b> · Elegibles: ${p.elegibles.join(', ')}</td></tr>`;
-    });
-    html += `</table></div>`;
-  }
-  let lastGroupMas = '';
-  MATCHES.forEach(m => {
-    if (!masResults[m.id]) return;
-    if (m.group !== lastGroupMas) {
-      html += `<div class="group-title">${m.group}</div>`;
-      lastGroupMas = m.group;
-    }
-    const s = masHistory[String(m.id)];
-    if (s) {
-      let gan;
-      if (s.pagos) {
-        const ganadores = Object.entries(s.pagos).filter(([,pts]) => pts > 0);
-        gan = ganadores.length > 0 ? ganadores.map(([u,pts]) => `${u} (+${pts}pts)`).join(', ') : 'Nadie acertó';
-      } else {
-        gan = (s.acertantesElegibles||[]).length > 0
-          ? s.acertantesElegibles.join(', ') + ` (+${s.premioElegible} pts)`
-          : (s.acertantes||[]).length > 0 ? s.acertantes.join(', ') + ' (no eleg.)' : 'Nadie acertó';
-      }
-      const totalDist = s.pozosLiquidados ? s.pozosLiquidados.reduce((sum,p) => sum+p.puntos, 0) : (s.pozoPartido + s.pozoAcumuladoAntes);
-      html += `<div class="card">
-        <b>${m.home} vs ${m.away}</b>
-        <div class="meta" style="color:#52b788">✓ Liquidado · Distribuido: ${totalDist} pts · ${gan}</div>
-        <button style="background:#415a77;margin-top:6px" onclick="resetMas(${m.id})">🔄 Reliquidar</button>
-      </div>`;
-    } else {
-      html += `<div class="card">
-        <b>${m.home} vs ${m.away}</b>
-        <div class="meta">Resultado: ${masResults[m.id].home}-${masResults[m.id].away} · Pendiente</div>
-        <button onclick="settleMas(${m.id})">💰 Liquidar MÁS</button>
-      </div>`;
-    }
-  });
-
   document.getElementById('admin').innerHTML = html;
 }
 
