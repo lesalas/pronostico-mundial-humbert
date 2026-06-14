@@ -219,18 +219,18 @@ MATCHES.push(
 
 // Resultados y bloqueos ahora se manejan en Firestore (colección "config")
 
-let currentUser = localStorage.getItem('quiniela_user') || null;
+let currentUser = localStorage.getItem('mundial_user') || null;
 
 function login() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { alert('Escribe tu nombre'); return; }
   currentUser = name;
-  localStorage.setItem('quiniela_user', name);
+  localStorage.setItem('mundial_user', name);
   init();
 }
 
 function logout() {
-  localStorage.removeItem('quiniela_user');
+  localStorage.removeItem('mundial_user');
   currentUser = null;
   init();
 }
@@ -641,7 +641,7 @@ async function renderTodos() {
 }
 
 const ADMIN_PASS = "humberto26"; // cámbiala si quieres
-let adminUnlocked = sessionStorage.getItem('admin_ok') === '1';
+let adminUnlocked = sessionStorage.getItem('admin_mundial_ok') === '1';
 
 async function renderAdmin() {
   if (!adminUnlocked) {
@@ -686,7 +686,7 @@ function checkAdmin() {
   const pass = document.getElementById('adminPass').value;
   if (pass === ADMIN_PASS) {
     adminUnlocked = true;
-    sessionStorage.setItem('admin_ok', '1');
+    sessionStorage.setItem('admin_mundial_ok', '1');
     renderAdmin();
   } else {
     alert('Clave incorrecta');
