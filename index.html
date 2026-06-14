@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spoters Dev Mundial 2026</title>
+<style>
+  * { box-sizing: border-box; font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  body { margin:0; background:#0d1b2a; color:#fff; padding-bottom:40px; }
+  header { background:#1b263b; padding:16px; text-align:center; position:sticky; top:0; z-index:10; }
+  header h1 { margin:0; font-size:20px; }
+  .tabs { display:flex; background:#1b263b; border-bottom:1px solid #415a77; }
+  .tab { flex:1; padding:12px; text-align:center; cursor:pointer; font-size:14px; }
+  .tab.active { background:#415a77; font-weight:bold; }
+  .container { padding:12px; max-width:600px; margin:0 auto; }
+  .card { background:#1b263b; border-radius:10px; padding:12px; margin-bottom:10px; }
+  .match { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .team { flex:1; text-align:center; font-size:13px; }
+  input[type=number] { width:50px; text-align:center; padding:6px; border-radius:6px; border:none; font-size:16px; }
+  input[type=number]:disabled { color:#fff; background:#415a77; opacity:1; }
+  .vs { padding:0 6px; color:#778da9; font-size:12px; }
+  .meta { font-size:11px; color:#778da9; margin-top:4px; text-align:center; }
+  button { background:#e63946; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-size:14px; cursor:pointer; width:100%; margin-top:8px; }
+  select, input[type=text] { width:100%; padding:10px; border-radius:6px; border:none; font-size:16px; margin-bottom:8px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:8px 4px; text-align:left; border-bottom:1px solid #415a77; }
+  th { color:#778da9; font-weight:normal; }
+  .pos { font-weight:bold; width:24px; }
+  .pts { text-align:right; font-weight:bold; color:#e63946; }
+  .saved { color:#52b788; font-size:12px; text-align:center; margin-top:4px; }
+  .hidden { display:none; }
+  .login { text-align:center; padding:40px 20px; }
+  .group-title { font-size:13px; color:#778da9; margin:16px 0 6px; padding-left:4px; }
+  .result { font-size:11px; color:#52b788; }
+</style>
+</head>
+<body>
+<header><h1>⚽ Spoters Dev Mundial 2026</h1></header>
+
+<div id="login" class="login">
+  <div class="card">
+    <p>Ingresa tu nombre para registrarte</p>
+    <input type="text" id="nameInput" placeholder="Tu nombre">
+    <button onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('partidos')">Partidos</div>
+    <div class="tab" onclick="showTab('tabla')">Tabla</div>
+    <div class="tab" onclick="showTab('todos')">Todos los picks</div>
+    <div class="tab" onclick="showTab('mas')">MÁS</div>
+    <div class="tab" onclick="showTab('admin')">⚙️</div>
+  </div>
+  <div class="container">
+    <div style="text-align:right; font-size:12px; color:#778da9; margin-bottom:8px;">
+      Jugando como: <b id="userLabel"></b> | <a href="#" onclick="logout()" style="color:#e63946;">cambiar</a>
+    </div>
+    <div id="partidos"></div>
+    <div id="tabla" class="hidden"></div>
+    <div id="todos" class="hidden"></div>
+    <div id="mas" class="hidden"></div>
+    <div id="admin" class="hidden"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBfOfmikjIGX2xdN8jfsqA-DwbqtbnltY0",
+  authDomain: "sporters-dev-mundial.firebaseapp.com",
+  projectId: "sporters-dev-mundial",
+  storageBucket: "sporters-dev-mundial.firebasestorage.app",
+  messagingSenderId: "750336519011",
+  appId: "1:750336519011:web:7ffb8984b0a6593c250156"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Exponer para el script principal (no-module)
+window._fb = { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc };
+</script>
+<script>
+// ---- Datos de partidos (fase de grupos Mundial 2026) ----
+const GROUPS = {
+  "Grupo A": ["México", "Sudáfrica", "Corea del Sur", "Rep. Checa"],
+  "Grupo B": ["Canadá", "Bosnia y Herzegovina", "Catar", "Suiza"],
+  "Grupo C": ["Brasil", "Marruecos", "Haití", "Escocia"],
+  "Grupo D": ["Estados Unidos", "Paraguay", "Australia", "Turquía"],
+  "Grupo E": ["Alemania", "Curazao", "Costa de Marfil", "Ecuador"],
+  "Grupo F": ["Países Bajos", "Japón", "Suecia", "Túnez"],
+  "Grupo G": ["Bélgica", "Egipto", "Irán", "Nueva Zelanda"],
+  "Grupo H": ["España", "Cabo Verde", "Arabia Saudí", "Uruguay"],
+  "Grupo I": ["Francia", "Senegal", "Irak", "Noruega"],
+  "Grupo J": ["Argentina", "Argelia", "Austria", "Jordania"],
+  "Grupo K": ["Portugal", "Rep. Dem. del Congo", "Uzbekistán", "Colombia"],
+  "Grupo L": ["Inglaterra", "Croacia", "Ghana", "Panamá"],
+};
+
+const MATCH_DATES = {
+  "México|Sudáfrica":              {date:"Jue 11/06",time:"15:00",venue:"Ciudad de México"},
+  "Corea del Sur|Rep. Checa":      {date:"Jue 11/06",time:"22:00",venue:"Guadalajara"},
+  "Rep. Checa|Sudáfrica":          {date:"Jue 18/06",time:"12:00",venue:"Atlanta"},
+  "Corea del Sur|México":          {date:"Jue 18/06",time:"21:00",venue:"Guadalajara"},
+  "Corea del Sur|Sudáfrica":       {date:"Mié 24/06",time:"21:00",venue:"Monterrey"},
+  "México|Rep. Checa":             {date:"Mié 24/06",time:"21:00",venue:"Ciudad de México"},
+  "Bosnia y Herzegovina|Canadá":   {date:"Vie 12/06",time:"15:00",venue:"Toronto"},
+  "Catar|Suiza":                   {date:"Sáb 13/06",time:"15:00",venue:"San Francisco"},
+  "Bosnia y Herzegovina|Suiza":    {date:"Jue 18/06",time:"15:00",venue:"Los Ángeles"},
+  "Canadá|Catar":                  {date:"Jue 18/06",time:"18:00",venue:"Vancouver"},
+  "Canadá|Suiza":                  {date:"Mié 24/06",time:"15:00",venue:"Vancouver"},
+  "Bosnia y Herzegovina|Catar":    {date:"Mié 24/06",time:"15:00",venue:"Seattle"},
+  "Brasil|Marruecos":              {date:"Sáb 13/06",time:"18:00",venue:"Nueva York/NJ"},
+  "Escocia|Haití":                 {date:"Sáb 13/06",time:"21:00",venue:"Boston"},
+  "Escocia|Marruecos":             {date:"Vie 19/06",time:"18:00",venue:"Boston"},
+  "Brasil|Haití":                  {date:"Vie 19/06",time:"21:00",venue:"Filadelfia"},
+  "Haití|Marruecos":               {date:"Mié 24/06",time:"18:00",venue:"Atlanta"},
+  "Estados Unidos|Paraguay":       {date:"Vie 12/06",time:"21:00",venue:"Los Ángeles"},
+  "Australia|Turquía":             {date:"Dom 14/06",time:"00:00",venue:"Vancouver"},
+  "Australia|Estados Unidos":      {date:"Vie 19/06",time:"17:00",venue:"Seattle"},
+  "Paraguay|Turquía":              {date:"Sáb 20/06",time:"00:00",venue:"San Francisco"},
+  "Australia|Paraguay":            {date:"Jue 25/06",time:"22:00",venue:"San Francisco"},
+  "Estados Unidos|Turquía":        {date:"Jue 25/06",time:"22:00",venue:"Los Ángeles"},
+  "Alemania|Curazao":              {date:"Dom 14/06",time:"13:00",venue:"Houston"},
+  "Costa de Marfil|Ecuador":       {date:"Dom 14/06",time:"19:00",venue:"Filadelfia"},
+  "Alemania|Costa de Marfil":      {date:"Sáb 20/06",time:"16:00",venue:"Toronto"},
+  "Curazao|Ecuador":               {date:"Sáb 20/06",time:"20:00",venue:"Kansas City"},
+  "Alemania|Ecuador":              {date:"Jue 25/06",time:"16:00",venue:"Nueva York/NJ"},
+  "Costa de Marfil|Curazao":       {date:"Jue 25/06",time:"16:00",venue:"Filadelfia"},
+  "Japón|Países Bajos":            {date:"Dom 14/06",time:"16:00",venue:"Dallas"},
+  "Suecia|Túnez":                  {date:"Dom 14/06",time:"22:00",venue:"Monterrey"},
+  "Países Bajos|Suecia":           {date:"Sáb 20/06",time:"13:00",venue:"Houston"},
+  "Japón|Túnez":                   {date:"Dom 21/06",time:"00:00",venue:"Monterrey"},
+  "Japón|Suecia":                  {date:"Jue 25/06",time:"19:00",venue:"Dallas"},
+  "Países Bajos|Túnez":            {date:"Jue 25/06",time:"19:00",venue:"Kansas City"},
+  "Bélgica|Egipto":                {date:"Lun 15/06",time:"15:00",venue:"Seattle"},
+  "Irán|Nueva Zelanda":            {date:"Lun 15/06",time:"21:00",venue:"Los Ángeles"},
+  "Bélgica|Irán":                  {date:"Dom 21/06",time:"15:00",venue:"Los Ángeles"},
+  "Egipto|Nueva Zelanda":          {date:"Dom 21/06",time:"21:00",venue:"Vancouver"},
+  "Egipto|Irán":                   {date:"Sáb 27/06",time:"23:00",venue:"Seattle"},
+  "Bélgica|Nueva Zelanda":         {date:"Sáb 27/06",time:"23:00",venue:"Vancouver"},
+  "Cabo Verde|España":             {date:"Lun 15/06",time:"12:00",venue:"Atlanta"},
+  "Arabia Saudí|Uruguay":          {date:"Lun 15/06",time:"18:00",venue:"Miami"},
+  "Arabia Saudí|España":           {date:"Dom 21/06",time:"12:00",venue:"Atlanta"},
+  "Cabo Verde|Uruguay":            {date:"Dom 21/06",time:"18:00",venue:"Miami"},
+  "España|Uruguay":                {date:"Vie 26/06",time:"20:00",venue:"Guadalajara"},
+  "Arabia Saudí|Cabo Verde":       {date:"Vie 26/06",time:"20:00",venue:"Houston"},
+  "Francia|Senegal":               {date:"Mar 16/06",time:"15:00",venue:"Nueva York/NJ"},
+  "Irak|Noruega":                  {date:"Mar 16/06",time:"18:00",venue:"Boston"},
+  "Francia|Irak":                  {date:"Lun 22/06",time:"17:00",venue:"Filadelfia"},
+  "Noruega|Senegal":               {date:"Lun 22/06",time:"20:00",venue:"Nueva York/NJ"},
+  "Francia|Noruega":               {date:"Vie 26/06",time:"15:00",venue:"Boston"},
+  "Irak|Senegal":                  {date:"Vie 26/06",time:"15:00",venue:"Toronto"},
+  "Argelia|Argentina":             {date:"Mar 16/06",time:"21:00",venue:"Kansas City"},
+  "Austria|Jordania":              {date:"Mié 17/06",time:"00:00",venue:"San Francisco"},
+  "Argentina|Austria":             {date:"Lun 22/06",time:"13:00",venue:"Dallas"},
+  "Argelia|Jordania":              {date:"Mar 23/06",time:"23:00",venue:"San Francisco"},
+  "Argentina|Jordania":            {date:"Sáb 27/06",time:"22:00",venue:"Dallas"},
+  "Argelia|Austria":               {date:"Sáb 27/06",time:"22:00",venue:"Kansas City"},
+  "Portugal|Rep. Dem. del Congo":  {date:"Mié 17/06",time:"13:00",venue:"Houston"},
+  "Colombia|Uzbekistán":           {date:"Mié 17/06",time:"22:00",venue:"Ciudad de México"},
+  "Portugal|Uzbekistán":           {date:"Mar 23/06",time:"13:00",venue:"Houston"},
+  "Colombia|Rep. Dem. del Congo":  {date:"Mar 23/06",time:"22:00",venue:"Guadalajara"},
+  "Colombia|Portugal":             {date:"Sáb 27/06",time:"19:30",venue:"Miami"},
+  "Rep. Dem. del Congo|Uzbekistán":{date:"Sáb 27/06",time:"19:30",venue:"Atlanta"},
+  "Croacia|Inglaterra":            {date:"Mié 17/06",time:"16:00",venue:"Dallas"},
+  "Ghana|Panamá":                  {date:"Mié 17/06",time:"19:00",venue:"Toronto"},
+  "Ghana|Inglaterra":              {date:"Mar 23/06",time:"16:00",venue:"Boston"},
+  "Croacia|Panamá":                {date:"Mar 23/06",time:"19:00",venue:"Toronto"},
+  "Croacia|Ghana":                 {date:"Sáb 27/06",time:"17:00",venue:"Filadelfia"},
+  "Inglaterra|Panamá":             {date:"Sáb 27/06",time:"17:00",venue:"Nueva York/NJ"},
+};
+
+let MATCHES = [];
+let _id = 1;
+for (const [group, teams] of Object.entries(GROUPS)) {
+  const pairs = [[0,1],[2,3],[1,2],[0,3],[3,1],[2,0]];
+  pairs.forEach(([h,a]) => {
+    const key = [teams[h], teams[a]].sort().join('|');
+    const sched = MATCH_DATES[key];
+    const date = sched ? `${sched.date} · ${sched.time} · ${sched.venue}` : 'jun 2026';
+    const sortKey = sched
+      ? `${sched.date.split('/')[1]}-${sched.date.split('/')[0].split(' ')[1].padStart(2,'0')}T${sched.time}`
+      : '99-99T99:99';
+    MATCHES.push({id:_id++, group, home:teams[h], away:teams[a], date, sortKey});
+  });
+}
+MATCHES.push(
+  {id:_id++, group:"Dieciseisavos", home:"1A", away:"3C/D/E/F", date:"28 jun - 3 jul", sortKey:'99-99T99:99'},
+  {id:_id++, group:"Octavos", home:"GanR16-1", away:"GanR16-2", date:"4-7 jul", sortKey:'99-99T99:99'},
+  {id:_id++, group:"Cuartos", home:"GanR8-1", away:"GanR8-2", date:"9-11 jul", sortKey:'99-99T99:99'},
+  {id:_id++, group:"Semifinal", home:"GanQF1", away:"GanQF2", date:"14-15 jul", sortKey:'99-99T99:99'},
+  {id:_id++, group:"Final", home:"FinalistaA", away:"FinalistaB", date:"19 jul", sortKey:'99-99T99:99'}
+);
+
+// Resultados y bloqueos ahora se manejan en Firestore (colección "config")
+
+let currentUser = localStorage.getItem('quiniela_user') || null;
+
+function login() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { alert('Escribe tu nombre'); return; }
+  currentUser = name;
+  localStorage.setItem('quiniela_user', name);
+  init();
+}
+
+function logout() {
+  localStorage.removeItem('quiniela_user');
+  currentUser = null;
+  init();
+}
+
+async function getAllUsers() {
+  try {
+    const { db, collection, getDocs } = window._fb;
+    const snap = await getDocs(collection(db, "users"));
+    return snap.docs.map(d => d.id);
+  } catch(e) { console.error(e); return []; }
+}
+
+async function getPicks(user) {
+  try {
+    const { db, doc, getDoc } = window._fb;
+    const ref = doc(db, "picks", user);
+    const snap = await getDoc(ref);
+    return snap.exists() ? snap.data() : {};
+  } catch(e) { console.error(e); return {}; }
+}
+
+async function getMasState() {
+  try {
+    const { db, doc, getDoc } = window._fb;
+    const snap = await getDoc(doc(db, 'config', 'mas_state'));
+    if (!snap.exists()) return { pozos: [] };
+    const data = snap.data();
+    return data.pozos !== undefined ? data : { pozos: [] };
+  } catch(e) { console.error(e); return { pozos: [] }; }
+}
+
+async function getMasHistory() {
+  try {
+    const { db, collection, getDocs } = window._fb;
+    const snap = await getDocs(collection(db, 'mas'));
+    const map = {};
+    snap.docs.forEach(d => { map[d.id] = d.data(); });
+    return map;
+  } catch(e) { console.error(e); return {}; }
+}
+
+async function getAllPicks(users) {
+  const results = await Promise.all(users.map(u => getPicks(u)));
+  const map = {};
+  users.forEach((u, i) => { map[u] = results[i]; });
+  return map;
+}
+
+async function savePicks(user, picks) {
+  try {
+    const { db, doc, setDoc } = window._fb;
+    await setDoc(doc(db, "picks", user), picks);
+    await setDoc(doc(db, "users", user), { name: user });
+  } catch(e) { console.error(e); }
+}
+
+async function getLocks() {
+  try {
+    const { db, doc, getDoc } = window._fb;
+    const snap = await getDoc(doc(db, "config", "locks"));
+    return snap.exists() ? snap.data() : {};
+  } catch(e) { console.error(e); return {}; }
+}
+
+async function setLock(matchId, locked) {
+  try {
+    const { db, doc, setDoc, getDoc } = window._fb;
+    const ref = doc(db, "config", "locks");
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? snap.data() : {};
+    data[matchId] = locked;
+    await setDoc(ref, data);
+  } catch(e) { console.error(e); }
+}
+
+async function getResults() {
+  try {
+    const { db, doc, getDoc } = window._fb;
+    const snap = await getDoc(doc(db, "config", "results"));
+    return snap.exists() ? snap.data() : {};
+  } catch(e) { console.error(e); return {}; }
+}
+
+async function setResult(matchId, home, away) {
+  try {
+    const { db, doc, setDoc, getDoc } = window._fb;
+    const ref = doc(db, "config", "results");
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? snap.data() : {};
+    if (home === '' || away === '') {
+      delete data[matchId];
+    } else {
+      data[matchId] = {home: parseInt(home), away: parseInt(away)};
+    }
+    await setDoc(ref, data);
+  } catch(e) { console.error(e); }
+}
+
+async function getPagos() {
+  try {
+    const { db, doc, getDoc } = window._fb;
+    const snap = await getDoc(doc(db, "config", "pagos"));
+    return snap.exists() ? snap.data() : {};
+  } catch(e) { console.error(e); return {}; }
+}
+
+async function setPago(matchId, userName, paid) {
+  try {
+    const { db, doc, setDoc, getDoc } = window._fb;
+    const ref = doc(db, "config", "pagos");
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? snap.data() : {};
+    data[`${matchId}_${userName}`] = paid;
+    await setDoc(ref, data);
+  } catch(e) { console.error(e); }
+}
+
+function isMatchPlaying(sortKey) {
+  if (!sortKey || sortKey === '99-99T99:99') return false;
+  const [monthDay, time] = sortKey.split('T');
+  const [month, day] = monthDay.split('-');
+  const start = new Date(`2026-${month}-${day}T${time}`);
+  const now = new Date();
+  return now >= start && now < new Date(start.getTime() + 105 * 60 * 1000);
+}
+
+function calcPoints(pick, result) {
+  if (!result || pick.home === '' || pick.away === '' || pick.home === undefined || pick.away === undefined) return 0;
+  const ph = parseInt(pick.home), pa = parseInt(pick.away);
+  const rh = result.home, ra = result.away;
+  if (isNaN(ph) || isNaN(pa)) return 0;
+  if (ph === rh && pa === ra) return 1;
+  return 2;
+}
+
+async function settleMas(matchId) {
+  if (!adminUnlocked) return;
+  const { db, doc, getDoc, setDoc } = window._fb;
+  const existing = await getDoc(doc(db, 'mas', String(matchId)));
+  if (existing.exists()) { alert('Este partido ya fue liquidado.'); return; }
+
+  const RESULTS = await getResults();
+  const result = RESULTS[matchId];
+  if (!result) { alert('Primero carga el resultado del partido.'); return; }
+
+  const users = await getAllUsers();
+  const picksMap = await getAllPicks(users);
+
+  const participants = users.filter(u => {
+    const p = picksMap[u][matchId];
+    return p && p.home !== '' && p.home !== undefined;
+  });
+
+  const acertantes = participants.filter(u => {
+    const p = picksMap[u][matchId];
+    return parseInt(p.home) === result.home && parseInt(p.away) === result.away;
+  });
+
+  const state = await getMasState();
+  const pozosAntes = state.pozos || [];
+  const newPool = { matchId, puntos: participants.length * 2, elegibles: participants };
+  const allPozos = [...pozosAntes, newPool];
+
+  const pagos = {};
+  const pozosLiquidados = [];
+  const pozosQuedan = [];
+
+  allPozos.forEach(pozo => {
+    const ganadores = acertantes.filter(u => pozo.elegibles.includes(u));
+    if (ganadores.length > 0) {
+      const premioPerGanador = pozo.puntos / ganadores.length;
+      ganadores.forEach(u => { pagos[u] = (pagos[u] || 0) + premioPerGanador; });
+      pozosLiquidados.push({ ...pozo, ganadores, premioPerGanador });
+    } else {
+      pozosQuedan.push(pozo);
+    }
+  });
+
+  const pozosDespues = pozosQuedan;
+
+  await setDoc(doc(db, 'mas', String(matchId)), {
+    participants,
+    acertantes,
+    pozosAntes,
+    newPool,
+    pozosLiquidados,
+    pozosDespues,
+    pagos
+  });
+
+  await setDoc(doc(db, 'config', 'mas_state'), { pozos: pozosDespues });
+
+  alert('✓ Partido liquidado');
+  renderAdmin();
+  renderMas();
+}
+
+async function resetMas(matchId) {
+  if (!adminUnlocked) return;
+  if (!confirm('¿Revertir esta liquidación? Los pozos volverán al estado anterior a este partido.')) return;
+  const { db, doc, getDoc, setDoc, deleteDoc } = window._fb;
+  const snap = await getDoc(doc(db, 'mas', String(matchId)));
+  if (!snap.exists()) { alert('No hay liquidación para revertir.'); return; }
+  const s = snap.data();
+  await setDoc(doc(db, 'config', 'mas_state'), { pozos: s.pozosAntes || [] });
+  await deleteDoc(doc(db, 'mas', String(matchId)));
+  alert('✓ Liquidación revertida. Ya puedes volver a liquidar.');
+  renderAdmin();
+  renderMas();
+}
+
+async function renderMas() {
+  const matchMap = {};
+  MATCHES.forEach(m => { matchMap[m.id] = m; });
+
+  const [state, masHistory, users] = await Promise.all([getMasState(), getMasHistory(), getAllUsers()]);
+
+  // Leaderboard: sumar premios del historial
+  const balances = {};
+  users.forEach(u => { balances[u] = 0; });
+  Object.values(masHistory).forEach(s => {
+    if (s.pagos) {
+      Object.entries(s.pagos).forEach(([u, pts]) => { if (balances[u] !== undefined) balances[u] += pts; });
+    } else {
+      (s.acertantesElegibles || []).forEach(u => { if (balances[u] !== undefined) balances[u] += s.premioElegible; });
+      const noEleg = (s.acertantes || []).filter(u => !(s.acertantesElegibles || []).includes(u));
+      noEleg.forEach(u => { if (balances[u] !== undefined) balances[u] += s.premioNoElegible; });
+    }
+  });
+  const sorted = Object.entries(balances).sort((a,b) => b[1]-a[1]);
+
+  // Card pozos activos
+  const pozos = state.pozos || [];
+  let pozosHtml;
+  if (pozos.length === 0) {
+    pozosHtml = '<div style="font-size:13px;color:#778da9;margin-top:4px">No hay pozos activos.</div>';
+  } else {
+    const totalPts = pozos.reduce((sum, p) => sum + p.puntos, 0);
+    pozosHtml = pozos.map((p, i) =>
+      `<div style="margin-top:10px;padding-top:${i>0?'10px':0};${i>0?'border-top:1px solid #1b2a3b':''}">
+        <span style="font-size:22px;font-weight:bold;color:#e63946">${p.puntos} pts</span>
+        <div style="font-size:11px;color:#778da9;margin-top:2px">Elegibles: ${p.elegibles.join(', ')}</div>
+      </div>`
+    ).join('') +
+    `<div style="margin-top:10px;font-size:11px;color:#778da9;border-top:1px solid #1b2a3b;padding-top:6px">Total en juego: ${totalPts} pts (${pozos.length} pozo${pozos.length>1?'s':''})</div>`;
+  }
+  let html = `<div class="card" style="text-align:center">
+    <div style="font-size:12px;color:#778da9;margin-bottom:4px">Pozos activos</div>
+    ${pozosHtml}
+  </div>`;
+
+  // Leaderboard
+  html += `<div class="card"><table>
+    <tr><th></th><th>Jugador</th><th class="pts">MÁS pts</th></tr>`;
+  sorted.forEach(([u,pts],i) => {
+    html += `<tr><td class="pos">${i+1}</td><td>${u}${u===currentUser?' (tú)':''}</td><td class="pts">${pts}</td></tr>`;
+  });
+  html += '</table></div>';
+
+  // Historial
+  const settled = Object.entries(masHistory).sort((a,b) => Number(b[0])-Number(a[0]));
+  if (settled.length === 0) {
+    html += '<div class="card" style="color:#778da9;text-align:center">Aún no hay partidos liquidados.</div>';
+  }
+  settled.forEach(([mid, s]) => {
+    const m = matchMap[Number(mid)];
+    const title = m ? `${m.home} vs ${m.away}` : `Partido ${mid}`;
+    let resultado;
+    if (s.pagos) {
+      const ganadores = Object.entries(s.pagos).filter(([,pts]) => pts > 0);
+      resultado = ganadores.length > 0
+        ? ganadores.map(([u, pts]) => `${u} <b style="color:#52b788">+${pts} pts</b>`).join(', ')
+        : '<span style="color:#778da9">Nadie acertó — pozos acumulados</span>';
+    } else {
+      if ((s.acertantesElegibles || []).length > 0) {
+        resultado = s.acertantesElegibles.map(u => `${u} <b style="color:#52b788">+${s.premioElegible} pts</b>`).join(', ');
+      } else if ((s.acertantes || []).length > 0) {
+        resultado = s.acertantes.map(u => `${u} <b style="color:#52b788">+${s.premioNoElegible} pts</b>`).join(', ')
+          + ` <span style="color:#778da9">(no elegibles)</span>`;
+      } else {
+        resultado = '<span style="color:#778da9">Nadie acertó — pozo acumulado</span>';
+      }
+    }
+    const pozoInfo = s.newPool
+      ? `Nuevo pozo: ${s.newPool.puntos} pts · Pozos liquidados: ${(s.pozosLiquidados||[]).length}`
+      : `Pozo partido: ${s.pozoPartido} pts · Acumulado previo: ${s.pozoAcumuladoAntes} pts`;
+    html += `<div class="card">
+      <div style="font-weight:bold;margin-bottom:6px">${title}</div>
+      <table>
+        <tr><td style="color:#778da9">Participantes</td><td>${s.participants.join(', ')}</td></tr>
+        <tr><td style="color:#778da9">Pozos</td><td>${pozoInfo}</td></tr>
+        <tr><td style="color:#778da9">Resultado</td><td>${resultado}</td></tr>
+      </table>
+    </div>`;
+  });
+
+  document.getElementById('mas').innerHTML = html;
+}
+
+async function renderPartidos() {
+  const picks = await getPicks(currentUser);
+  const locks = await getLocks();
+  const RESULTS = await getResults();
+  let html = '';
+  let lastDate = '';
+  const sorted = [...MATCHES].sort((a,b) => a.sortKey.localeCompare(b.sortKey));
+  sorted.forEach(m => {
+    const dateLabel = m.date.includes('·') ? m.date.split(' · ')[0] : m.date;
+    if (dateLabel !== lastDate) {
+      html += `<div class="group-title">${dateLabel}</div>`;
+      lastDate = dateLabel;
+    }
+    const p = picks[m.id] || {home:'', away:''};
+    const result = RESULTS[m.id];
+    const locked = !!locks[m.id];
+    const playing = !result && isMatchPlaying(m.sortKey);
+    const metaDetail = m.date.includes('·') ? m.date.split(' · ').slice(1).join(' · ') : '';
+    html += `
+    <div class="card">
+      <div class="match">
+        <div class="team">${m.home}</div>
+        <input type="number" min="0" id="h_${m.id}" value="${p.home}" onchange="updatePick(${m.id})" ${locked ? 'disabled' : ''}>
+        <span class="vs">-</span>
+        <input type="number" min="0" id="a_${m.id}" value="${p.away}" onchange="updatePick(${m.id})" ${locked ? 'disabled' : ''}>
+        <div class="team">${m.away}</div>
+      </div>
+      <div class="meta">${m.group}${metaDetail ? ` · ${metaDetail}` : ''}${locked ? ' · 🔒 Cerrado' : ''}${playing ? ' · <span style="color:#4caf50">🟢 En vivo</span>' : ''}${result ? ` · Resultado: ${result.home}-${result.away}` : ''}</div>
+      ${result ? `<div class="result" style="text-align:center">Tus puntos: ${calcPoints({home:p.home, away:p.away}, result)}</div>` : ''}
+    </div>`;
+  });
+  document.getElementById('partidos').innerHTML = html;
+}
+
+let saveTimeout;
+async function updatePick(matchId) {
+  const locks = await getLocks();
+  if (locks[matchId]) { alert('Este partido ya está cerrado.'); init(); return; }
+  const picks = await getPicks(currentUser);
+  picks[matchId] = {
+    home: document.getElementById('h_'+matchId).value,
+    away: document.getElementById('a_'+matchId).value
+  };
+  await savePicks(currentUser, picks);
+  clearTimeout(saveTimeout);
+  const card = event.target.closest('.card');
+  let msg = card.querySelector('.saved');
+  if (!msg) {
+    msg = document.createElement('div');
+    msg.className = 'saved';
+    msg.textContent = '✓ Guardado';
+    card.appendChild(msg);
+  }
+  saveTimeout = setTimeout(() => msg.remove(), 1500);
+}
+
+async function renderTabla() {
+  const users = await getAllUsers();
+  const RESULTS = await getResults();
+  const picksMap = await getAllPicks(users);
+  const scores = [];
+  for (const u of users) {
+    const picks = picksMap[u];
+    let total = 0;
+    let exactos = 0;
+    let bol = 0;
+    MATCHES.forEach(m => {
+      const result = RESULTS[m.id];
+      if (result && picks[m.id]) {
+        const pts = calcPoints(picks[m.id], result);
+        total += pts;
+        if (pts === 1) exactos++;
+        bol++;
+      }
+    });
+    scores.push({user:u, total, exactos, bol, bolPts: bol * 2});
+  }
+  scores.sort((a,b) => b.bolPts - a.bolPts || b.exactos - a.exactos);
+  let html = `<div class="card"><table>
+    <tr><th></th><th>Jugador</th><th>Exactos</th><th class="pts">Bol.</th></tr>`;
+  scores.forEach((s,i) => {
+    html += `<tr><td class="pos">${i+1}</td><td>${s.user}${s.user===currentUser?' (tú)':''}</td><td>${s.exactos}</td><td class="pts">${s.bolPts}</td></tr>`;
+  });
+  const totalBol = scores.reduce((sum, s) => sum + s.bolPts, 0);
+  html += `<tr style="border-top:2px solid #415a77"><td></td><td style="color:#778da9">Total</td><td></td><td class="pts">${totalBol}</td></tr>`;
+  html += '</table></div>';
+  if (scores.length === 0) html = '<div class="card">Aún no hay resultados cargados.</div>';
+  document.getElementById('tabla').innerHTML = html;
+}
+
+async function renderTodos() {
+  const users = await getAllUsers();
+  const [picksMap, RESULTS, pagos] = await Promise.all([getAllPicks(users), getResults(), getPagos()]);
+  let html = '';
+  for (const m of [...MATCHES].sort((a,b) => a.sortKey.localeCompare(b.sortKey))) {
+    const result = RESULTS[m.id];
+    const resultStr = result ? ` · <b style="color:#e63946">${result.home}-${result.away}</b>` : '';
+    html += `<div class="card"><div class="meta" style="text-align:left; margin-bottom:6px;"><b>${m.home} vs ${m.away}</b>${resultStr} — ${m.group} · ${m.date}</div><table>`;
+    for (const u of users) {
+      const p = picksMap[u][m.id];
+      const hasPick = p && p.home !== '' && p.home !== undefined;
+      const val = hasPick ? `${p.home} - ${p.away}` : '—';
+      const pagoIndicator = hasPick
+        ? (!!pagos[`${m.id}_${u}`]
+          ? '<span style="color:#52b788;font-size:10px;margin-left:4px">● Pagó</span>'
+          : '<span style="color:#e63946;font-size:10px;margin-left:4px">● No pagó</span>')
+        : '';
+      html += `<tr><td>${u}${u===currentUser?' (tú)':''}${pagoIndicator}</td><td style="text-align:right">${val}</td></tr>`;
+    }
+    html += '</table></div>';
+  }
+  document.getElementById('todos').innerHTML = html;
+}
+
+const ADMIN_PASS = "mundial2026"; // cámbiala si quieres
+let adminUnlocked = sessionStorage.getItem('admin_ok') === '1';
+
+async function renderAdmin() {
+  if (!adminUnlocked) {
+    document.getElementById('admin').innerHTML = `
+      <div class="card">
+        <p>Clave de administrador</p>
+        <input type="text" id="adminPass" placeholder="Clave">
+        <button onclick="checkAdmin()">Entrar</button>
+      </div>`;
+    return;
+  }
+  const [locks, RESULTS, allUsers, pagos] = await Promise.all([getLocks(), getResults(), getAllUsers(), getPagos()]);
+  const picksMap = await getAllPicks(allUsers);
+  let html = '';
+  let lastDate = '';
+  const sortedMatches = [...MATCHES].sort((a,b) => a.sortKey.localeCompare(b.sortKey));
+  sortedMatches.forEach(m => {
+    const dateLabel = m.date.includes('·') ? m.date.split(' · ')[0] : m.date;
+    if (dateLabel !== lastDate) {
+      html += `<div class="group-title">${dateLabel}</div>`;
+      lastDate = dateLabel;
+    }
+    const locked = !!locks[m.id];
+    const r = RESULTS[m.id] || {home:'', away:''};
+    const usersWithPick = allUsers.filter(u => {
+      const p = picksMap[u][m.id];
+      return p && p.home !== '' && p.home !== undefined;
+    });
+    let pagosBlock = '';
+    if (usersWithPick.length > 0) {
+      pagosBlock = `<div style="margin-top:8px;border-top:1px solid #415a77;padding-top:8px">
+        <div style="font-size:11px;color:#778da9;margin-bottom:4px">Pagos</div>
+        <table>`;
+      usersWithPick.forEach(u => {
+        const paid = !!pagos[`${m.id}_${u}`];
+        pagosBlock += `<tr>
+          <td>${u}</td>
+          <td style="text-align:right">
+            <button style="width:auto;margin:0;padding:4px 10px;font-size:12px;background:${paid?'#52b788':'#e63946'}" onclick="togglePago(${m.id}, '${u}', ${!paid})">
+              ${paid ? '✓ Pagó' : '✗ No pagó'}
+            </button>
+          </td>
+        </tr>`;
+      });
+      pagosBlock += `</table></div>`;
+    }
+    html += `
+    <div class="card">
+      <div class="meta" style="text-align:left; margin-bottom:6px;"><b>${m.home} vs ${m.away}</b> — ${m.group}</div>
+      <div class="match">
+        <input type="number" min="0" id="rh_${m.id}" value="${r.home}" style="width:50px">
+        <span class="vs">-</span>
+        <input type="number" min="0" id="ra_${m.id}" value="${r.away}" style="width:50px">
+        <button style="width:auto; flex:1; margin:0;" onclick="saveResult(${m.id})">Guardar resultado</button>
+      </div>
+      <button style="background:${locked?'#52b788':'#e63946'}" onclick="toggleLock(${m.id}, ${!locked})">
+        ${locked ? '🔓 Desbloquear' : '🔒 Bloquear'}
+      </button>
+      ${pagosBlock}
+    </div>`;
+  });
+  // Sección MÁS
+  const [masState, masHistory, masResults] = await Promise.all([getMasState(), getMasHistory(), getResults()]);
+  html += `<div class="group-title">MÁS — Liquidar partidos</div>`;
+  const adminPozos = masState.pozos || [];
+  if (adminPozos.length === 0) {
+    html += `<div class="card" style="text-align:center;color:#778da9">Sin pozos activos</div>`;
+  } else {
+    html += `<div class="card"><table>`;
+    adminPozos.forEach((p, i) => {
+      html += `<tr><td style="color:#778da9">Pozo ${i+1}</td><td><b style="color:#e63946">${p.puntos} pts</b> · Elegibles: ${p.elegibles.join(', ')}</td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  let lastGroupMas = '';
+  MATCHES.forEach(m => {
+    if (!masResults[m.id]) return;
+    if (m.group !== lastGroupMas) {
+      html += `<div class="group-title">${m.group}</div>`;
+      lastGroupMas = m.group;
+    }
+    const s = masHistory[String(m.id)];
+    if (s) {
+      let gan;
+      if (s.pagos) {
+        const ganadores = Object.entries(s.pagos).filter(([,pts]) => pts > 0);
+        gan = ganadores.length > 0 ? ganadores.map(([u,pts]) => `${u} (+${pts}pts)`).join(', ') : 'Nadie acertó';
+      } else {
+        gan = (s.acertantesElegibles||[]).length > 0
+          ? s.acertantesElegibles.join(', ') + ` (+${s.premioElegible} pts)`
+          : (s.acertantes||[]).length > 0 ? s.acertantes.join(', ') + ' (no eleg.)' : 'Nadie acertó';
+      }
+      const totalDist = s.pozosLiquidados ? s.pozosLiquidados.reduce((sum,p) => sum+p.puntos, 0) : (s.pozoPartido + s.pozoAcumuladoAntes);
+      html += `<div class="card">
+        <b>${m.home} vs ${m.away}</b>
+        <div class="meta" style="color:#52b788">✓ Liquidado · Distribuido: ${totalDist} pts · ${gan}</div>
+        <button style="background:#415a77;margin-top:6px" onclick="resetMas(${m.id})">🔄 Reliquidar</button>
+      </div>`;
+    } else {
+      html += `<div class="card">
+        <b>${m.home} vs ${m.away}</b>
+        <div class="meta">Resultado: ${masResults[m.id].home}-${masResults[m.id].away} · Pendiente</div>
+        <button onclick="settleMas(${m.id})">💰 Liquidar MÁS</button>
+      </div>`;
+    }
+  });
+
+  document.getElementById('admin').innerHTML = html;
+}
+
+function checkAdmin() {
+  const pass = document.getElementById('adminPass').value;
+  if (pass === ADMIN_PASS) {
+    adminUnlocked = true;
+    sessionStorage.setItem('admin_ok', '1');
+    renderAdmin();
+  } else {
+    alert('Clave incorrecta');
+  }
+}
+
+async function toggleLock(matchId, newState) {
+  await setLock(matchId, newState);
+  renderAdmin();
+}
+
+async function togglePago(matchId, userName, paid) {
+  await setPago(matchId, userName, paid);
+  renderAdmin();
+}
+
+async function saveResult(matchId) {
+  const h = document.getElementById('rh_'+matchId).value;
+  const a = document.getElementById('ra_'+matchId).value;
+  await setResult(matchId, h, a);
+  alert('Resultado guardado');
+}
+
+
+function showTab(tab) {
+  ['partidos','tabla','todos','mas','admin'].forEach(t => {
+    document.getElementById(t).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('active', ['partidos','tabla','todos','mas','admin'][i] === tab);
+  });
+  if (tab === 'tabla') renderTabla();
+  if (tab === 'todos') renderTodos();
+  if (tab === 'mas') renderMas();
+  if (tab === 'admin') renderAdmin();
+}
+
+function waitForFirebase() {
+  return new Promise(resolve => {
+    if (window._fb) return resolve();
+    const i = setInterval(() => {
+      if (window._fb) { clearInterval(i); resolve(); }
+    }, 50);
+  });
+}
+
+async function init() {
+  await waitForFirebase();
+  if (currentUser) {
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('userLabel').textContent = currentUser;
+    await renderPartidos();
+  } else {
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
